@@ -9,7 +9,7 @@ public class GameModel {
     private ArrayList<String> dictionary;
     private ArrayList<String> guessedWords;
     private ArrayList<String> guessedLetters;
-    private HashMap<String, Integer> numLettersInWord;
+    private HashMap<String, Long> numLettersInWord;
     private String mysteryWord;
 
     public GameModel(){
@@ -18,7 +18,7 @@ public class GameModel {
         guessedLetters = new ArrayList<>();
         numLettersInWord = new HashMap<>();
         setRandomMysteryWord();
-//        getNumLetters();
+        initNumLettersToDict();
     }
 
     public void addGuessedWord(String guessedWord) {
@@ -40,7 +40,6 @@ public class GameModel {
     public void clearGuessedWords(){
         guessedWords.clear();
     }
-
 
     public String getGuessedLetter(int index) {
         return guessedLetters.get(index);
@@ -76,12 +75,36 @@ public class GameModel {
         System.out.println(mysteryWord);
     }
 
-//    public int getNumLetters(String letter) {
-//        if (mysteryWord.contains(letter)) {
-//        mysteryWord.
-//
-//        } else return 0;
-//    }
+    public long getNumLettersInWord(String letter) {
+        if (mysteryWord.contains(letter)) {
+            return mysteryWord.chars().filter(e -> e == letter.charAt(0)).count();
+        }
+        return 0;
+    }
+
+    public void initNumLettersToDict() {
+        if (numLettersInWord == null) {
+            numLettersInWord = new HashMap<>();
+        }
+        else numLettersInWord.clear();
+        for (int idx = 0; idx < mysteryWord.length(); idx++) {
+            String letter = String.valueOf(mysteryWord.charAt(idx));
+            numLettersInWord.put(letter, getNumLettersInWord(letter));
+        }
+    }
+
+    public long getNumLettersRemaining(String letter){
+        if (mysteryWord.contains(letter)) {
+            return numLettersInWord.get(letter);
+        }
+        return 0;
+    }
+
+    public void reduceNumLettersRemaining(String letter) {
+        if (numLettersInWord.containsKey(letter)){
+            numLettersInWord.put(letter, getNumLettersRemaining(letter)-1);
+        }
+    }
 
     public String getMysteryWord(){
         return mysteryWord;

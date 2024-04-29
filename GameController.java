@@ -7,20 +7,16 @@ import java.util.Objects;
 public class GameController {
     private final GameModel model;
     private final GameView view;
-    private int guessCount;
-    private int currentTileIdx;
-    private int wordStartIdx;
-    private int wordEndIdx;
     private KeyAdapter keyAdapter;
     private Timer timer;
+    private int guessCount = 0;
+    private int currentTileIdx = 0;
+    private int wordStartIdx = 0;
+    private int wordEndIdx = 5;
 
     public GameController(GameModel model, GameView view) {
         this.view = view;
         this.model = model;
-        wordStartIdx = 0;
-        wordEndIdx = 5;
-        guessCount = 0;
-        currentTileIdx = 0;
         setEmptyGuessedLetters();
         setTileColors();
         refreshBoard();
@@ -87,6 +83,7 @@ public class GameController {
         guessCount++;
         wordStartIdx = wordStartIdx + 5;
         wordEndIdx = wordEndIdx + 5;
+        model.initNumLettersToDict();
         refreshBoard();
     }
 
@@ -102,35 +99,28 @@ public class GameController {
             }
             else if (Objects.equals(letterStr, String.valueOf(model.getMysteryWord().charAt(letterIdx)))) {
                 view.setTileColor(tileIdx, new Color(117, 173, 107));
+                model.reduceNumLettersRemaining(letterStr);
             }
-            else if (model.getMysteryWord().contains(letterStr)) {
+            else if (model.getMysteryWord().contains(letterStr) & letterCountNotExceedsMax(letterStr)) {
                 view.setTileColor(tileIdx, new Color(224, 191, 81));
+                model.reduceNumLettersRemaining(letterStr);
             } else {
                 view.setTileColor(tileIdx, Color.DARK_GRAY);
             }
+
             tileIdx++;
             letterIdx++;
+
             if (letterIdx == 5) {
                 letterIdx = 0;
+                model.initNumLettersToDict();
             }
         }
     }
 
-    private void printValues(){
-        System.out.println("currentTileIdx" + " " + currentTileIdx);
-        System.out.println("wordStartIndx" + " " + wordStartIdx);
+    private boolean letterCountNotExceedsMax(String letterStr) {
+        return model.getNumLettersRemaining(letterStr) > 0;
     }
-
-//    private boolean isColored(String letterStr) {
-//        if (numCharsUsed.containsKey(letterStr)) {
-//            System.out.println(numCharsUsed);
-//            if (numCharsUsed.get(letterStr) >= 0){
-//                numCharsUsed.replace(letterStr, numCharsUsed.get(letterStr) - 1);
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
 
     private void validateGuess(String guessWord) {
         boolean guessed = false;
@@ -168,6 +158,7 @@ public class GameController {
         model.clearGuessedWords();
         model.clearGuessedLetters();
         model.setRandomMysteryWord();
+        model.initNumLettersToDict();
         setEmptyGuessedLetters();
         refreshBoard();
         addKeyAdapter();
