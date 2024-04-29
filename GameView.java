@@ -8,38 +8,81 @@ import java.util.ArrayList;
 
 public class GameView {
     private JFrame frame;
-    private JLabel title;
-    private JLabel wrapper;
-    public JPanel board;
-    private JPanel buttonPanel;
+    private JPanel board;
     private JButton restartButton;
     private JButton quitButton;
-    public ArrayList<Color> tileColors;
+    private JDialog dialogBox;
+    private ArrayList<Color> tileColors;
 
     public GameView(){
+        tileColors = new ArrayList<>();
         initComponents();
-        configureTitle();
-        configureBoard();
-        configureButtonPanel();
-        configureFrame();
-        assembleComponents();
     }
 
     private void initComponents(){
         frame = new JFrame("Wordley");
-        title = new JLabel("Wordley");
         quitButton = new JButton("Quit");
         restartButton = new JButton("Restart");
-        buttonPanel = new JPanel(new GridLayout(1,2));
         board = new JPanel(new GridLayout(6, 5, 10, 10));
-        wrapper = new JLabel();
-        tileColors = new ArrayList<>();
-    }
-    private void configureTitle() {
+
+        JLabel title = new JLabel("Wordley");
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2));
+        JLabel wrapper = new JLabel();
+
+        frame.setSize(500,600);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.setResizable(false);
+        frame.setBackground(Color.BLACK);
+
         title.setPreferredSize(new Dimension(400,35));
         title.setFont(new Font("Arial", Font.BOLD, 35));
         title.setForeground(Color.WHITE);
         title.setHorizontalAlignment(0);
+
+        board.setPreferredSize(new Dimension(400,400));
+        board.setBackground(Color.BLACK);
+
+        buttonPanel.setPreferredSize(new Dimension(400,35));
+        buttonPanel.setAlignmentX(0);
+        buttonPanel.setBackground(Color.BLACK);
+        buttonPanel.add(restartButton);
+        buttonPanel.add(quitButton);
+
+        wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
+        wrapper.setBackground(Color.BLACK);
+        wrapper.setOpaque(true);
+        wrapper.add(Box.createHorizontalStrut(10));
+        wrapper.add(wrap(title));
+        wrapper.add(Box.createHorizontalStrut(10));
+        wrapper.add(wrap(board));
+        wrapper.add(Box.createHorizontalStrut(10));
+        wrapper.add(wrap(buttonPanel));
+        wrapper.add(Box.createHorizontalStrut(10));
+
+        frame.add(wrapper);
+        frame.setVisible(true);
+    }
+
+    public void showDialogBox(String text) {
+        dialogBox = new JDialog();
+        dialogBox.setSize(300,75);
+        dialogBox.setLocationRelativeTo(frame);
+        JLabel msg = new JLabel(text, SwingConstants.CENTER);
+        msg.setFont(new Font("Arial", Font.BOLD, 15));
+        msg.setBackground(Color.BLACK);
+        msg.setForeground(Color.WHITE);
+        msg.setOpaque(true);
+        dialogBox.add(msg);
+        dialogBox.setUndecorated(true);
+        dialogBox.setVisible(true);
+    }
+
+    public void hideDialogBox() {
+        if (dialogBox != null) {
+            dialogBox.setVisible(false);
+            dialogBox.dispose();
+            dialogBox = null;
+        }
     }
 
     public void setListenerQuitButton(ActionListener listener){
@@ -66,18 +109,6 @@ public class GameView {
         board.requestFocusInWindow();
     }
 
-    private void configureButtonPanel() {
-        buttonPanel.setPreferredSize(new Dimension(400,35));
-        buttonPanel.setAlignmentX(0);
-        buttonPanel.setBackground(Color.BLACK);
-        buttonPanel.add(restartButton);
-        buttonPanel.add(quitButton);
-    }
-    private void configureBoard() {
-        board.setPreferredSize(new Dimension(400,400));
-        board.setBackground(Color.BLACK);
-    }
-
     private JPanel wrap(JComponent c){
         JPanel panel = new JPanel();
         panel.setLayout(new FlowLayout(FlowLayout.CENTER,0,0));
@@ -85,28 +116,6 @@ public class GameView {
         panel.add(c);
         panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, c.getPreferredSize().height));
         return panel;
-    }
-
-    private void configureFrame() {
-        frame.setSize(500,600);
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        frame.setResizable(false);
-        frame.setBackground(Color.BLACK);
-        frame.setVisible(true);
-    }
-
-    private void assembleComponents() {
-        wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
-        wrapper.setBackground(Color.BLACK);
-        wrapper.setOpaque(true);
-        wrapper.add(Box.createHorizontalStrut(10));
-        wrapper.add(wrap(title));
-        wrapper.add(Box.createHorizontalStrut(10));
-        wrapper.add(wrap(board));
-        wrapper.add(Box.createHorizontalStrut(10));
-        wrapper.add(wrap(buttonPanel));
-        wrapper.add(Box.createHorizontalStrut(10));
-        frame.add(wrapper);
     }
 
     public void refreshBoard(ArrayList<String> guessedLetters) {
@@ -147,19 +156,6 @@ public class GameView {
 
     public void addTileColor(Color color) {
         tileColors.add(color);
-    }
-
-    public void failure(String mysteryWord) {
-        System.out.println("Sorry, the word was " + mysteryWord);
-    }
-
-    public void success(String mysteryWord) {
-        System.out.println("Correct! The word was " + mysteryWord);
-    }
-
-    public void gameOver() {
-        System.out.println("Game over");
-        System.out.println("Press 'Restart' to play again");
     }
 
 }

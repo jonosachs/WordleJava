@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -8,13 +9,16 @@ public class GameModel {
     private ArrayList<String> dictionary;
     private ArrayList<String> guessedWords;
     private ArrayList<String> guessedLetters;
+    private HashMap<String, Integer> numLettersInWord;
     private String mysteryWord;
 
     public GameModel(){
         initDictionary("csv/5_letter_common_words.csv");
         guessedWords = new ArrayList<>();
         guessedLetters = new ArrayList<>();
+        numLettersInWord = new HashMap<>();
         setRandomMysteryWord();
+//        getNumLetters();
     }
 
     public void addGuessedWord(String guessedWord) {
@@ -71,6 +75,13 @@ public class GameModel {
         mysteryWord = dictionary.get(randomNumber);
         System.out.println(mysteryWord);
     }
+
+//    public int getNumLetters(String letter) {
+//        if (mysteryWord.contains(letter)) {
+//        mysteryWord.
+//
+//        } else return 0;
+//    }
 
     public String getMysteryWord(){
         return mysteryWord;

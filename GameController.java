@@ -1,16 +1,18 @@
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.Objects;
 
 public class GameController {
-    private GameModel model;
-    private GameView view;
+    private final GameModel model;
+    private final GameView view;
     private int guessCount;
     private int currentTileIdx;
     private int wordStartIdx;
     private int wordEndIdx;
     private KeyAdapter keyAdapter;
+    private Timer timer;
 
     public GameController(GameModel model, GameView view) {
         this.view = view;
@@ -67,10 +69,9 @@ public class GameController {
                     model.setGuessedLetter(currentTileIdx," ");
                     refreshBoard();
                 }
-                if (keyPressed == KeyEvent.VK_ENTER && currentTileIdx == wordEndIdx) {
+                if (keyPressed == KeyEvent.VK_ENTER) {
                     String guessWord = getGuessWord();
                     validateGuess(guessWord);
-
                 }
             }
         };
@@ -131,10 +132,10 @@ public class GameController {
 //        return false;
 //    }
 
-    private void validateGuess(String guessWord){
+    private void validateGuess(String guessWord) {
         boolean guessed = false;
         if (Objects.equals(guessWord, model.getMysteryWord())) {
-            view.success(model.getMysteryWord());
+            success(model.getMysteryWord());
             endGame();
             guessed = true;
         }
@@ -142,18 +143,14 @@ public class GameController {
                 !model.getGuessedWords().contains(guessWord)) {
             validGuess(guessWord);
         } else {
-            System.out.println("invalid word");
+            invalidWord();
         }
         if (guessCount == 6 & !guessed) {
-            view.failure(model.getMysteryWord());
+            failure(model.getMysteryWord());
             endGame();
         }
     }
 
-    private void endGame(){
-        view.removeKeyAdapter(keyAdapter);
-        view.gameOver();
-    }
     private String getGuessWord() {
         StringBuilder guess = new StringBuilder();
         for (int i = wordStartIdx; i < wordEndIdx; i++) {
@@ -174,5 +171,39 @@ public class GameController {
         setEmptyGuessedLetters();
         refreshBoard();
         addKeyAdapter();
+    }
+
+    private void invalidWord() {
+        view.showDialogBox("Invalid word");
+        delayedHideDialog(650);
+    }
+
+    public void delayedHideDialog(int delay){
+        timer = new Timer(delay, e -> {
+            view.hideDialogBox();
+            timer.stop();
+        });
+        timer.start();
+    }
+
+    private void endGame(){
+        view.removeKeyAdapter(keyAdapter);
+    }
+
+    public void failure(String mysteryWord) {
+        view.showDialogBox("Sorry, the word was " + mysteryWord);
+        delayedHideDialog(2500);
+    }
+
+    public void success(String mysteryWord) {
+        view.showDialogBox("Correct! The word was " + mysteryWord);
+        delayedHideDialog(2500);
+    }
+
+    public void gameOver() {
+        view.showDialogBox("""
+                        Game over
+                        Press 'Restart' to play again
+                        """);
     }
 }
