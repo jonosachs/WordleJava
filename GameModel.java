@@ -1,10 +1,12 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 
+/**
+ * Class contains the dictionary and gets the random mystery word.
+ * Keeps track of guessed words and letters during play.
+ * Stores the quantity of each guess letter occurrence in the mystery word (used for tile coloring)
+ */
 public class GameModel {
     private ArrayList<String> dictionary;
     private ArrayList<String> guessedWords;
@@ -18,15 +20,31 @@ public class GameModel {
         guessedLetters = new ArrayList<>();
         numLettersInWord = new HashMap<>();
         setRandomMysteryWord();
-        initNumLettersToDict();
+        initNumLettersRemaining();
     }
 
     public void addGuessedWord(String guessedWord) {
         guessedWords.add(guessedWord);
     }
 
+    public ArrayList<String> getGuessedWords() {
+        return guessedWords;
+    }
+
+    public String getGuessedWord(int wordIndex) {
+        return guessedWords.get(wordIndex);
+    }
+
+    public void clearGuessedWords(){
+        guessedWords.clear();
+    }
+
     public void addGuessedLetter(String guessedLetter) {
         guessedLetters.add(guessedLetter);
+    }
+
+    public ArrayList<String> getGuessedLetters() {
+        return guessedLetters;
     }
 
     public void setGuessedLetter(int index, String guessedChar) {
@@ -37,22 +55,11 @@ public class GameModel {
         guessedLetters.clear();
     }
 
-    public void clearGuessedWords(){
-        guessedWords.clear();
-    }
-
-    public String getGuessedLetter(int index) {
-        return guessedLetters.get(index);
-    }
-
-    public ArrayList<String> getGuessedWords() {
-        return guessedWords;
-    }
-
-    public ArrayList<String> getGuessedLetters() {
-        return guessedLetters;
-    }
-
+    /**
+     * Gets the dictionary from local csv file and stores in an ArrayList
+     *
+     * @param csvPath Path for the csv file
+     */
     private void initDictionary(String csvPath) {
         dictionary = new ArrayList<>();
         try (Scanner scanner = new Scanner(new File(csvPath))) {
@@ -68,31 +75,51 @@ public class GameModel {
         return dictionary;
     }
 
+    /**
+     * Selects a word from the dictionary using randomly generated index
+     */
     public void setRandomMysteryWord() {
         Random rand = new Random();
-        int randomNumber = rand.nextInt(0, dictionary.size() - 1);
-        mysteryWord = dictionary.get(randomNumber);
-        System.out.println(mysteryWord);
+        int randomIndexNum = rand.nextInt(0, dictionary.size() - 1);
+        mysteryWord = dictionary.get(randomIndexNum);
+//        System.out.println(mysteryWord);
     }
 
-    public long getNumLettersInWord(String letter) {
-        if (mysteryWord.contains(letter)) {
-            return mysteryWord.chars().filter(e -> e == letter.charAt(0)).count();
+    /**
+     * Determines the number of occurrences of a particular letter in a word
+     *
+     * @param word The target word
+     * @param letter The target letter to count occurrences
+     * @return The number of letter occurrences
+     */
+    public long getNumLettersInWord(String word, String letter) {
+        if (word.contains(letter)) {
+            return word.chars().filter(e -> e == letter.charAt(0)).count();
         }
         return 0;
     }
 
-    public void initNumLettersToDict() {
+    /**
+     * Initialises the number of occurrences of each letter in the mystery word remaining
+     * before any are 'consumed' in a guess.
+     */
+    public void initNumLettersRemaining() {
         if (numLettersInWord == null) {
             numLettersInWord = new HashMap<>();
         }
         else numLettersInWord.clear();
         for (int idx = 0; idx < mysteryWord.length(); idx++) {
             String letter = String.valueOf(mysteryWord.charAt(idx));
-            numLettersInWord.put(letter, getNumLettersInWord(letter));
+            numLettersInWord.put(letter, getNumLettersInWord(getMysteryWord(), letter));
         }
     }
 
+    /**
+     * Gets the number of occurrences of a guess letter remaining, less those used in the guess already
+     *
+     * @param letter The guess letter to check remaining quantity
+     * @return The quantity remaining
+     */
     public long getNumLettersRemaining(String letter){
         if (mysteryWord.contains(letter)) {
             return numLettersInWord.get(letter);
@@ -100,9 +127,9 @@ public class GameModel {
         return 0;
     }
 
-    public void reduceNumLettersRemaining(String letter) {
+    public void setNumLettersRemaining(String letter, long numRemaining) {
         if (numLettersInWord.containsKey(letter)){
-            numLettersInWord.put(letter, getNumLettersRemaining(letter)-1);
+            numLettersInWord.put(letter, numRemaining);
         }
     }
 

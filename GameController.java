@@ -4,6 +4,12 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.Objects;
 
+/**
+ * Class handles interaction between view and model classes.
+ * Assigns key and action listeners for keyboard input and button presses
+ * Validates guesses and determines tile colors based on letter correctness
+ * Restart and Quit game functionality
+ */
 public class GameController {
     private final GameModel model;
     private final GameView view;
@@ -18,15 +24,10 @@ public class GameController {
         this.view = view;
         this.model = model;
         setEmptyGuessedLetters();
-        setTileColors();
+        setBlackTiles();
         refreshBoard();
         addActionListeners();
         addKeyAdapter();
-    }
-
-    private void refreshBoard(){
-        setTileColors();
-        view.refreshBoard(model.getGuessedLetters());
     }
 
     private void setEmptyGuessedLetters() {
@@ -37,18 +38,34 @@ public class GameController {
     }
 
     private void setBlackTiles() {
+        if (!view.getTileColors().isEmpty()) {
+            view.clearTileColor();
+        }
         for (int x = 0; x < 30; x++) {
             view.addTileColor(Color.BLACK);
         }
     }
 
+    private void refreshBoard(){
+        view.refreshBoard(model.getGuessedLetters());
+    }
+
+    /**
+     * Sets action listeners for game buttons
+     */
     private void addActionListeners(){
         view.setListenerQuitButton(e -> view.closeFrame());
         view.setListenerRestartButton(e -> restartGame());
     }
 
+    /**
+     * Creates keyAdapator to listen for key presses.
+     * Passes alphabetic inputs to model repository to display on the board.
+     * Sends input for validation when enter key is pressed.
+     *
+     */
     private void addKeyAdapter() {
-        view.setFocusBoard();
+        view.setFocusToBoard();
         keyAdapter = new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -74,54 +91,24 @@ public class GameController {
         view.setKeyAdapter(keyAdapter);
     }
 
-    private void validGuess(String guess){
-        for (int idx = 0; idx < guess.length(); idx++) {
-            String letter = String.valueOf(guess.charAt(idx));
-            model.setGuessedLetter(wordStartIdx + idx, letter);
+    /**
+     * Gets the current guess letters and arranges into a 5-letter word
+     *
+     * @return The 5-letter word as a String
+     */
+    private String getGuessWord() {
+        StringBuilder guess = new StringBuilder();
+        for (int i = wordStartIdx; i < wordEndIdx; i++) {
+            guess.append(model.getGuessedLetters().get(i));
         }
-        model.addGuessedWord(guess);
-        guessCount++;
-        wordStartIdx = wordStartIdx + 5;
-        wordEndIdx = wordEndIdx + 5;
-        model.initNumLettersToDict();
-        refreshBoard();
+        return guess.toString().toLowerCase();
     }
 
-    public void setTileColors() {
-        if (view.getTileColors().isEmpty()) {
-            setBlackTiles();
-        }
-        int tileIdx = 0;
-        int letterIdx = 0;
-        for (String letterStr : model.getGuessedLetters()) {
-            if (letterStr.equals(" ") | tileIdx >= wordStartIdx) {
-                view.setTileColor(tileIdx, Color.BLACK);
-            }
-            else if (Objects.equals(letterStr, String.valueOf(model.getMysteryWord().charAt(letterIdx)))) {
-                view.setTileColor(tileIdx, new Color(117, 173, 107));
-                model.reduceNumLettersRemaining(letterStr);
-            }
-            else if (model.getMysteryWord().contains(letterStr) & letterCountNotExceedsMax(letterStr)) {
-                view.setTileColor(tileIdx, new Color(224, 191, 81));
-                model.reduceNumLettersRemaining(letterStr);
-            } else {
-                view.setTileColor(tileIdx, Color.DARK_GRAY);
-            }
-
-            tileIdx++;
-            letterIdx++;
-
-            if (letterIdx == 5) {
-                letterIdx = 0;
-                model.initNumLettersToDict();
-            }
-        }
-    }
-
-    private boolean letterCountNotExceedsMax(String letterStr) {
-        return model.getNumLettersRemaining(letterStr) > 0;
-    }
-
+    /**
+     * Validates word guesses and determines appropriate actions.
+     *
+     * @param guessWord The 5-letter word to be validated
+     */
     private void validateGuess(String guessWord) {
         boolean guessed = false;
         if (Objects.equals(guessWord, model.getMysteryWord())) {
@@ -131,7 +118,7 @@ public class GameController {
         }
         if (model.getDictionary().contains(guessWord) &&
                 !model.getGuessedWords().contains(guessWord)) {
-            validGuess(guessWord);
+            commitValidGuess(guessWord);
         } else {
             invalidWord();
         }
@@ -141,12 +128,63 @@ public class GameController {
         }
     }
 
-    private String getGuessWord() {
-        StringBuilder guess = new StringBuilder();
-        for (int i = wordStartIdx; i < wordEndIdx; i++) {
-            guess.append(model.getGuessedLetter(i));
+    private void commitValidGuess(String guess){
+        for (int idx = 0; idx < guess.length(); idx++) {
+            String letter = String.valueOf(guess.charAt(idx));
+            model.setGuessedLetter(wordStartIdx + idx, letter);
         }
-        return guess.toString().toLowerCase();
+        model.addGuessedWord(guess);
+        guessCount++;
+        wordStartIdx = wordStartIdx + 5;
+        wordEndIdx = wordEndIdx + 5;
+        model.initNumLettersRemaining();
+        setGuessTileColors();
+        refreshBoard();
+    }
+
+    /**
+     * Sets tile colors for the last guess based on correctness and position.
+     */
+    public void setGuessTileColors() {
+        int tileIdx = wordStartIdx-5;
+        int letterIdx = 0;
+
+        for (String letterStr : model.getGuessedLetters().subList(wordStartIdx-5, wordEndIdx-5)) {
+            //Letter contained in mystery word AND in correct position = green
+            if (Objects.equals(letterStr, String.valueOf(model.getMysteryWord().charAt(letterIdx)))) {
+                view.setTileColor(tileIdx, new Color(117, 173, 107));
+            }
+            //Letter contained in mystery word but in wrong position = yellow
+            else if (model.getMysteryWord().contains(letterStr) & guessLetterRemaining(letterStr)) {
+                view.setTileColor(tileIdx, new Color(224, 191, 81));
+            } else {
+                view.setTileColor(tileIdx, Color.DARK_GRAY);    //Guessed letters not in mystery word = dark grey.
+            }
+
+            tileIdx++;
+            letterIdx++;
+        }
+    }
+
+    /**
+     * Checks if any occurrences of a non-green guess letter remain in the mystery word after
+     * any green occurrences have been accounted for.
+     *
+     * @param letterStr Guess letter to check against the remaining instances
+     * @return True if the remaining instances are above 0, else False.
+     */
+    private boolean guessLetterRemaining(String letterStr) {
+        String guessWord = model.getGuessedWord(guessCount-1);
+
+        //Deduct green letters from the number of letters remaining
+        for (int idx = 0; idx < guessWord.length(); idx++) {
+            boolean isGreenLetter = guessWord.charAt(idx) == model.getMysteryWord().charAt(idx);
+            if (isGreenLetter) {
+                model.setNumLettersRemaining(String.valueOf(guessWord.charAt(idx)),
+                       model.getNumLettersRemaining(letterStr)-1);
+            }
+        }
+        return model.getNumLettersRemaining(letterStr) > 0;
     }
 
     private void restartGame() {
@@ -158,23 +196,29 @@ public class GameController {
         model.clearGuessedWords();
         model.clearGuessedLetters();
         model.setRandomMysteryWord();
-        model.initNumLettersToDict();
+        model.initNumLettersRemaining();
         setEmptyGuessedLetters();
+        setBlackTiles();
         refreshBoard();
         addKeyAdapter();
     }
 
-    private void invalidWord() {
-        view.showDialogBox("Invalid word");
-        delayedHideDialog(650);
-    }
-
-    public void delayedHideDialog(int delay){
+    /**
+     * Timer to delay closure of the dialogue box
+     *
+     * @param delay Delay duration in milliseconds
+     */
+    public void delayHideDialog(int delay){
         timer = new Timer(delay, e -> {
             view.hideDialogBox();
             timer.stop();
         });
         timer.start();
+    }
+
+    private void invalidWord() {
+        view.showDialogBox("Invalid word");
+        delayHideDialog(650);
     }
 
     private void endGame(){
@@ -183,18 +227,12 @@ public class GameController {
 
     public void failure(String mysteryWord) {
         view.showDialogBox("Sorry, the word was " + mysteryWord);
-        delayedHideDialog(2500);
+        delayHideDialog(2500);
     }
 
     public void success(String mysteryWord) {
         view.showDialogBox("Correct! The word was " + mysteryWord);
-        delayedHideDialog(2500);
+        delayHideDialog(2500);
     }
 
-    public void gameOver() {
-        view.showDialogBox("""
-                        Game over
-                        Press 'Restart' to play again
-                        """);
-    }
 }
