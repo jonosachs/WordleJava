@@ -1,5 +1,6 @@
 # Wordley
 
-Simple imitation Wordle game written in Java with Swing for GUI. 
+Simple imitation Wordle game written in Java.
 
-Uses MVC (model-view-controller) pattern.
+Screenshot:
+![img.png](screenshot.png)

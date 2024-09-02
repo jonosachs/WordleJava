@@ -8,7 +8,7 @@ import java.util.Objects;
  * Class handles interaction between view and model classes.
  * Assigns key and action listeners for keyboard input and button presses
  * Validates guesses and determines tile colors based on letter correctness
- * Restart and Quit game functionality
+ * Restart and Quit game functionality  
  */
 public class GameController {
     private final GameModel model;
@@ -85,6 +85,9 @@ public class GameController {
                 if (keyPressed == KeyEvent.VK_ENTER) {
                     String guessWord = getGuessWord();
                     validateGuess(guessWord);
+                }
+                if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_W) {
+                    System.out.println(model.getMysteryWord());
                 }
             }
         };

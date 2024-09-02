@@ -82,6 +82,7 @@ public class GameModel {
         Random rand = new Random();
         int randomIndexNum = rand.nextInt(0, dictionary.size() - 1);
         mysteryWord = dictionary.get(randomIndexNum);
+//        mysteryWord = "balmy";
 //        System.out.println(mysteryWord);
     }
 
