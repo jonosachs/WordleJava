@@ -1,6 +1,6 @@
 # Wordley
 
-Simple imitation Wordle game written in Java.
+Wordle-style game written in Java with Swing.
 
 Screenshot:
 
